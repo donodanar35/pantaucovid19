@@ -1,74 +1,87 @@
-/* eslint-disable comma-dangle */
-/* eslint-disable prefer-destructuring */
-/* eslint-disable no-sparse-arrays */
-/* eslint-disable import/order */
-/* eslint-disable no-unused-vars */
-/* eslint-disable import/no-extraneous-dependencies */
-const { merge } = require('webpack-merge');
 const path = require('path');
-const common = require('./webpack.common');
-const ImageminWebpackPlugin = require('imagemin-webpack-plugin').default;
-const ImageminMozjpeg = require('imagemin-mozjpeg');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-module.exports = merge(common, {
+module.exports = {
   entry: {
-    index: path.resolve(__dirname, 'src/scripts/index.js'),
-  },
+      index: './src/app.js',
+      index2: './src/app2.js',
+      index3: './src/app3.js',
+    }, 
   output: {
     filename: '[name].bundle.js',
     chunkFilename: '[name].bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist')
   },
-  optimization: {
-    splitChunks: {
+    mode: "production", 
+    optimization: {
+      splitChunks: {
       chunks: 'all',
-      minSize: 100,
-      maxSize: 20000,
-      minChunks: 1,
-      maxAsyncRequests: 30,
-      maxInitialRequests: 30,
-      automaticNameDelimiter: '~',
-      enforceSizeThreshold: 50000,
-      cacheGroups: {
-        defaultVendors: {
-          test: /[\\/]node_modules[\\/]/,
-          priority: -10
-        },
-        default: {
-          minChunks: 2,
-          priority: -20,
-          reuseExistingChunk: true
-        }
-      }
-    }
+    },
   },
-  mode: 'production',
   module: {
     rules: [
+        //image loader
+        //{test: /\.(png|svg|jpg|gif)$/, use: ['file-loader']},
+        { test: /ignore\.(png|jpg|gif|svg)$/, loader: 'ignore-loader' },
+        { test: /\.(png|jpg|gif|svg)$/, loader: 'file-loader', options: { name: './images/[name].[ext]?[hash]' } },
+        //css loader
+        //{ test: /\.css$/, use: 'css-loader' },
+        //babel loader
+        {
+            test: /\.js$/,
+            exclude: "/node_modules/",
+            use: [
+                {
+                    loader: "babel-loader",
+                    options: {
+                        presets: ["@babel/preset-env"]
+                    }
+                }
+            ]
+        },
+       //bootstrap loader
       {
-        test: /\.js$/,
-        exclude: '/node_modules/',
-        use: [
+        test: /\.(scss|css)$/,
+        use: [ 
           {
-            loader: 'babel-loader',
-            options: {
-              presets: ['@babel/preset-env'],
-            },
+            // Adds CSS to the DOM by injecting a `<style>` tag
+            loader: 'style-loader'
           },
-        ],
-      },
-    ],
+          {
+            // Interprets `@import` and `url()` like `import/require()` and will resolve them
+            loader: 'css-loader'
+          },
+          {
+            // Loader for webpack to process CSS with PostCSS
+            loader: 'postcss-loader',
+            options: {
+              plugins: function () {
+                return [
+                  require('autoprefixer')
+                ];
+              }
+            }
+          },
+          {
+            // Loads a SASS/SCSS file and compiles it to CSS
+            loader: 'sass-loader'
+          }
+        ]
+
+      }
+    ]
   },
-  plugins: [ /* ... Other webpack plugins configuration  ... */
-    new ImageminWebpackPlugin({
-      plugins: [
-        ImageminMozjpeg({
-          quality: 60,
-          progressive: true,
-        }),
-      ],
+
+  plugins: [
+    /* HTML Webpack Plugin */
+    new HtmlWebpackPlugin({
+        template: "./src/template.html",
+        filename: "index.html"
     }),
-    new BundleAnalyzerPlugin(),
-  ],
-});
+    new HtmlWebpackPlugin({
+      template: "./src/tentang.html",
+      filename: "tentang.html"
+    })
+  ]
+
+};

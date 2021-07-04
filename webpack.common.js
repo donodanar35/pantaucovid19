@@ -1,52 +1,77 @@
-/* eslint-disable import/no-extraneous-dependencies */
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const ServiceWorkerWebpackPlugin = require('serviceworker-webpack-plugin');
 const path = require('path');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  entry: path.resolve(__dirname, 'src/scripts/index.js'),
+  entry: {
+      index: './src/app.js'},
   output: {
-    path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
   },
   module: {
     rules: [
-      {
-        test: /\.css$/,
-        use: [
-          {
-            loader: 'style-loader',
-          },
-          {
-            loader: 'css-loader',
-          },
-        ],
-      },
-      {
-        test: /\.(png|svg|jpg|jpeg|gif)$/,
-        use: [
-          'file-loader',
-        ],
-      },
-
-    ],
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, 'src/templates/index.html'),
-      filename: 'index.html',
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
+        //image loader
+        //{test: /\.(png|svg|jpg|gif)$/, use: ['file-loader']},
+        { test: /ignore\.(png|jpg|gif|svg)$/, loader: 'ignore-loader' },
+        { test: /\.(png|jpg|gif|svg)$/, loader: 'file-loader', options: { name: '[name].[ext]?[hash]' } },
+        //css loader
+        //{ test: /\.css$/, use: 'css-loader' },
+        //babel loader
         {
-          from: path.resolve(__dirname, 'src/public/'),
-          to: path.resolve(__dirname, 'dist/'),
+            test: /\.js$/,
+            exclude: "/node_modules/",
+            use: [
+                {
+                    loader: "babel-loader",
+                    options: {
+                        presets: ["@babel/preset-env"]
+                    }
+                }
+            ]
         },
-      ],
+       //bootstrap loader
+      {
+        test: /\.(scss|css)$/,
+        use: [ 
+          {
+            // Adds CSS to the DOM by injecting a `<style>` tag
+            loader: 'style-loader'
+          },
+          {
+            // Interprets `@import` and `url()` like `import/require()` and will resolve them
+            loader: 'css-loader'
+          },
+          {
+            // Loader for webpack to process CSS with PostCSS
+            loader: 'postcss-loader',
+            options: {
+              plugins: function () {
+                return [
+                  require('autoprefixer')
+                ];
+              }
+            }
+          },
+          {
+            // Loads a SASS/SCSS file and compiles it to CSS
+            loader: 'sass-loader'
+          }
+        ]
+
+      }
+    ]
+  },
+
+  plugins: [
+    /* HTML Webpack Plugin */
+    new HtmlWebpackPlugin({
+        template: "./src/template.html",
+        filename: "index.html"
     }),
-    new ServiceWorkerWebpackPlugin({
-      entry: path.resolve(__dirname, 'src/scripts/sw.js'),
-    }),
-  ],
+    new HtmlWebpackPlugin({
+      template: "./src/tentang.html",
+      filename: "tentang.html"
+    })
+  ]
+
 };
